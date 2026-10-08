@@ -1,0 +1,18 @@
+# Rahasia: jangan pernah di-commit
+.env
+.env.*
+!.env.example
+
+# Build output
+bin/
+backend/bin/
+
+# Frontend
+node_modules/
+.next/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

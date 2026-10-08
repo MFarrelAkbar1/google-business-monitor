@@ -1,0 +1,23 @@
+version: '3'
+
+# Variabel dari .env (jika ada) otomatis dimuat untuk semua task.
+dotenv: ['.env']
+
+tasks:
+  test:
+    desc: Jalankan semua unit test backend
+    dir: backend
+    cmds:
+      - go test ./...
+
+  vet:
+    desc: Analisis statis kode Go
+    dir: backend
+    cmds:
+      - go vet ./...
+
+  probe:
+    desc: "Cek satu place_id ke API asli. Contoh: task probe -- -place-id ChIJ... [-every 30m]"
+    dir: backend
+    cmds:
+      - go run ./cmd/probe {{.CLI_ARGS}}
