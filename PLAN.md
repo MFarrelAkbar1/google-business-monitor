@@ -195,6 +195,21 @@ memilih kandidat. Parser link Maps dan redirect short link ditunda.
 - `languageCode` memengaruhi format `displayName` dan `formattedAddress`. Probe memakai
   `id` / region `ID`. Baseline harus dibuat dengan bahasa yang sama.
 
+- `businessStatus` kosong dari Google dianggap cocok, bukan perubahan, supaya tidak ada alarm palsu.
+  Perlu dicek lewat probe: seberapa sering field ini memang tidak dikirim.
+- Alamat dibandingkan sebagai teks utuh. Kalau Google mengubah format `formattedAddress`
+  (misalnya menambah kode pos), itu terdeteksi sebagai mismatch SEDANG.
+
+## Keputusan implementasi Fase 1.2
+
+- Normalisasi website membuang query dan fragment (`?utm_source=gmb` bukan perubahan).
+- Baseline nama/alamat kosong = field itu tidak dipantau.
+- Untuk link WhatsApp, perubahan nomor hanya dilaporkan lewat field `whatsapp` (KRITIS),
+  bukan juga sebagai "path berbeda" di field `website`.
+- `listings.poll_interval` minimal 1 jam (CHECK constraint) untuk menjaga kuota.
+- Nilai pilihan (kind, severity, status, channel) memakai CHECK di kolom text, bukan ENUM.
+- Postgres docker-compose di port host **5433** (5432 sudah dipakai Postgres lokal).
+
 ## Riwayat keputusan
 
 - **Revisi 1:** tidak menyimpan nilai atau hash dari Google; jam buka tidak dipantau;

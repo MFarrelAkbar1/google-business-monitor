@@ -1,0 +1,18 @@
+# sqlc membaca schema dari file migrasi dan query dari internal/store/queries,
+# lalu menghasilkan kode Go yang type-safe di internal/store.
+# Jalankan ulang setelah mengubah SQL: task sqlc
+version: "2"
+sql:
+  - engine: postgresql
+    schema: db/migrations
+    queries: internal/store/queries
+    gen:
+      go:
+        package: store
+        out: internal/store
+        sql_package: pgx/v5
+        emit_json_tags: false
+        emit_empty_slices: true
+        overrides:
+          - db_type: citext
+            go_type: string

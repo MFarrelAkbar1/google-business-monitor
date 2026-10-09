@@ -5,10 +5,38 @@ dotenv: ['.env']
 
 tasks:
   test:
-    desc: Jalankan semua unit test backend
+    desc: Jalankan semua test backend (integration test butuh Docker berjalan)
     dir: backend
     cmds:
       - go test ./...
+
+  test:unit:
+    desc: Jalankan unit test saja, tanpa Docker
+    dir: backend
+    cmds:
+      - go test -short ./...
+
+  up:
+    desc: Nyalakan Postgres dan Mailpit untuk dev
+    cmds:
+      - docker compose up -d --wait
+
+  down:
+    desc: Matikan layanan dev (data Postgres tetap tersimpan di volume)
+    cmds:
+      - docker compose down
+
+  sqlc:
+    desc: Generate ulang kode Go dari query SQL
+    dir: backend
+    cmds:
+      - go tool sqlc generate
+
+  migrate:
+    desc: "Jalankan goose ke DATABASE_URL. Contoh: task migrate -- up | down | status"
+    dir: backend
+    cmds:
+      - go tool goose -dir db/migrations postgres "$DATABASE_URL" {{.CLI_ARGS | default "up"}}
 
   vet:
     desc: Analisis statis kode Go

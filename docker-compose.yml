@@ -1,0 +1,23 @@
+# Layanan untuk development lokal: task up / task down
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: jaga
+      POSTGRES_PASSWORD: jaga
+      POSTGRES_DB: jagalisting
+    # Port 5433 di host, supaya tidak bentrok dengan Postgres lokal di 5432.
+    ports: ["5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jaga -d jagalisting"]
+      interval: 2s
+      retries: 15
+
+  # Penangkap email untuk dev (Fase 2). UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ["1025:1025", "8025:8025"]
+
+volumes:
+  pgdata:
