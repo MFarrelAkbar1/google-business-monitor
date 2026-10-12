@@ -220,6 +220,31 @@ memilih kandidat. Parser link Maps dan redirect short link ditunda.
   Outlook). Alternatifnya: tampilkan nilainya dalam kotak yang mudah diblok dan disalin, atau
   beri tautan ke dashboard (Fase 4) yang punya tombol copy sungguhan.
 
+## Keputusan implementasi Task 4
+
+- **Retry:** kolom baru `notifications.next_attempt_at` (migrasi 00003), yang juga dipakai sebagai
+  lease (5 menit). Backoff 1m, 2m, 4m, …, maksimal 1 jam; setelah 8 percobaan (±2 jam)
+  status menjadi `failed`. Error permanen langsung `failed`: alamat email tidak valid, SMTP 5xx
+  saat RCPT, Telegram 400/401/403/404, atau user belum punya `telegram_chat_id`.
+- **At-least-once:** jika pesan terkirim tetapi proses mati sebelum status `sent` tersimpan,
+  pesan dikirim ulang. Peringatan ganda lebih baik daripada tidak ada peringatan.
+- Notifikasi untuk channel tanpa sender (misalnya `TELEGRAM_BOT_TOKEN` kosong) tidak diambil
+  dan tetap `pending`.
+- **Isi pesan:** jenis perubahan, tingkat bahaya, waktu (WIB), **data yang benar menurut
+  pemilik** (baseline), dan link Google Maps (`api=1&query_place_id=…`). Nilai Google tidak ada
+  di pesan karena memang tidak disimpan.
+- **"Tombol copy":** di email, nilai baseline ditaruh di kotak monospace dengan
+  `user-select: all` (satu klik memilih semuanya di klien yang mendukung; di klien lain tetap
+  bisa diblok biasa). Di Telegram, nilai ada di `<code>`, yang bisa disalin dengan sekali ketuk.
+  Tombol copy sungguhan menunggu dashboard (Fase 4).
+- Event yang sudah `auto_resolved` sebelum notifikasinya terkirim tetap dikirim (jeda
+  normalnya hanya detik).
+- Email dikirim lewat SMTP dengan STARTTLS bila ditawarkan server; port 465 (TLS langsung)
+  belum didukung.
+- Error HTTP dari Telegram dibersihkan dari URL supaya token bot tidak masuk log atau `last_error`.
+- Menghubungkan akun Telegram (`/api/me/telegram/link`, webhook) ada di Fase 3. Sampai saat itu,
+  `telegram_chat_id` diisi manual di database.
+
 ## Keputusan implementasi Task 3
 
 - **Claim dengan lease:** satu query `UPDATE … FROM (SELECT … FOR UPDATE SKIP LOCKED)` mengambil
