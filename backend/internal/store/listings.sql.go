@@ -12,7 +12,7 @@ import (
 const createListing = `-- name: CreateListing :one
 INSERT INTO listings (user_id, place_id, label)
 VALUES ($1, $2, $3)
-RETURNING id, user_id, place_id, label, poll_interval, next_check_at, last_checked_at, last_check_status, last_error, active, created_at
+RETURNING id, user_id, place_id, label, poll_interval, next_check_at, last_checked_at, last_check_status, last_error, active, created_at, consecutive_failures
 `
 
 type CreateListingParams struct {
@@ -36,6 +36,7 @@ func (q *Queries) CreateListing(ctx context.Context, arg CreateListingParams) (L
 		&i.LastError,
 		&i.Active,
 		&i.CreatedAt,
+		&i.ConsecutiveFailures,
 	)
 	return i, err
 }
@@ -87,7 +88,7 @@ func (q *Queries) GetBaseline(ctx context.Context, listingID int64) (Baseline, e
 }
 
 const getListingForUser = `-- name: GetListingForUser :one
-SELECT id, user_id, place_id, label, poll_interval, next_check_at, last_checked_at, last_check_status, last_error, active, created_at FROM listings
+SELECT id, user_id, place_id, label, poll_interval, next_check_at, last_checked_at, last_check_status, last_error, active, created_at, consecutive_failures FROM listings
 WHERE id = $1 AND user_id = $2
 `
 
@@ -112,6 +113,7 @@ func (q *Queries) GetListingForUser(ctx context.Context, arg GetListingForUserPa
 		&i.LastError,
 		&i.Active,
 		&i.CreatedAt,
+		&i.ConsecutiveFailures,
 	)
 	return i, err
 }

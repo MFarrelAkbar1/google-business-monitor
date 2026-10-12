@@ -210,6 +210,38 @@ memilih kandidat. Parser link Maps dan redirect short link ditunda.
 - Nilai pilihan (kind, severity, status, channel) memakai CHECK di kolom text, bukan ENUM.
 - Postgres docker-compose di port host **5433** (5432 sudah dipakai Postgres lokal).
 
+## Fase 2 dibagi dua task
+
+- **Task 3:** scheduler + monitor + `cmd/worker`. Notifikasi baru sampai di tabel
+  `notifications` (status `pending`), belum dikirim.
+- **Task 4:** pengirim notifikasi dari outbox: email (SMTP, Mailpit di dev) dan Telegram,
+  dengan retry. Permintaan pemilik: template email diberi **tombol copy** untuk nilai penting.
+  ⚠️ Tombol copy berbasis JavaScript diblokir oleh sebagian besar klien email (Gmail,
+  Outlook). Alternatifnya: tampilkan nilainya dalam kotak yang mudah diblok dan disalin, atau
+  beri tautan ke dashboard (Fase 4) yang punya tombol copy sungguhan.
+
+## Keputusan implementasi Task 3
+
+- **Claim dengan lease:** satu query `UPDATE … FROM (SELECT … FOR UPDATE SKIP LOCKED)` mengambil
+  listing yang jatuh tempo dan langsung memajukan `next_check_at` 10 menit. Transaksinya
+  singkat, sehingga koneksi DB tidak tertahan selama call ke Google. Jika worker mati di tengah
+  pengecekan, listing dicek ulang setelah lease habis.
+- **Backoff:** kolom baru `listings.consecutive_failures` (migrasi 00002). Jadwal ulang setelah
+  error sementara adalah 15m, 30m, 1j, 2j, dan seterusnya, maksimal `poll_interval`. Error
+  permanen (place tidak ditemukan, place_id tidak valid, baseline kosong) langsung memakai
+  `poll_interval`.
+- Scheduler yang mencatat hasil (`last_check_status`, `last_error`), bukan monitor, supaya
+  mudah diganti ForgeQ.
+- Listing tanpa baseline tidak memanggil Google.
+- Notifikasi dibuat per channel: `email` selalu, `telegram` hanya jika user punya
+  `telegram_chat_id`.
+- `api_usage_daily` hanya menghitung call yang benar-benar sampai ke Google.
+- Rate limiter: `places.WithRateLimit` (decorator di atas `Client`), satu limiter per proses,
+  `PLACES_RPS` default 1.
+- Worker tidak menjalankan migrasi otomatis.
+- ⚠️ Place yang hilang (404) saat ini hanya dicatat di `last_error`. Mungkin perlu jadi event
+  dan notifikasi, karena listing yang dihapus atau digabung orang lain juga termasuk serangan.
+
 ## Riwayat keputusan
 
 - **Revisi 1:** tidak menyimpan nilai atau hash dari Google; jam buka tidak dipantau;

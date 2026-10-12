@@ -2,68 +2,21 @@ package store_test
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/jackc/pgx/v5/stdlib" // mendaftarkan driver "pgx" untuk database/sql (dipakai goose)
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"jagalisting/db"
 	"jagalisting/internal/store"
+	"jagalisting/internal/testdb"
 )
 
-// Integration test: menjalankan Postgres sungguhan di Docker lewat
-// testcontainers, menerapkan migrasi, lalu menguji query sqlc.
-// Dilewati jika Docker tidak berjalan atau jika memakai "go test -short".
-
-// newTestDB menyiapkan satu database bersih yang sudah dimigrasi.
-func newTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	if testing.Short() {
-		t.Skip("integration test dilewati dengan -short")
-	}
-	testcontainers.SkipIfProviderIsNotHealthy(t)
-
-	ctx := context.Background()
-	ctr, err := postgres.Run(ctx, "postgres:17-alpine",
-		postgres.WithDatabase("jagalisting_test"),
-		postgres.BasicWaitStrategies(),
-	)
-	// CleanupContainer tetap dipanggil walau err != nil, supaya container yang
-	// sempat dibuat tidak tertinggal.
-	testcontainers.CleanupContainer(t, ctr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dsn, err := ctr.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sqlDB, err := sql.Open("pgx", dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer sqlDB.Close()
-	if err := db.Migrate(ctx, sqlDB); err != nil {
-		t.Fatal(err)
-	}
-
-	pool, err := pgxpool.New(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
-}
+// Integration test: menjalankan Postgres sungguhan di Docker (lihat package
+// testdb), lalu menguji query sqlc.
 
 func TestStore(t *testing.T) {
-	pool := newTestDB(t)
+	pool := testdb.New(t)
 	ctx := context.Background()
 	q := store.New(pool)
 

@@ -47,17 +47,18 @@ type FieldCheck struct {
 }
 
 type Listing struct {
-	ID              int64
-	UserID          int64
-	PlaceID         string
-	Label           string
-	PollInterval    pgtype.Interval
-	NextCheckAt     pgtype.Timestamptz
-	LastCheckedAt   pgtype.Timestamptz
-	LastCheckStatus pgtype.Text
-	LastError       pgtype.Text
-	Active          bool
-	CreatedAt       pgtype.Timestamptz
+	ID                  int64
+	UserID              int64
+	PlaceID             string
+	Label               string
+	PollInterval        pgtype.Interval
+	NextCheckAt         pgtype.Timestamptz
+	LastCheckedAt       pgtype.Timestamptz
+	LastCheckStatus     pgtype.Text
+	LastError           pgtype.Text
+	Active              bool
+	CreatedAt           pgtype.Timestamptz
+	ConsecutiveFailures int32
 }
 
 type Notification struct {

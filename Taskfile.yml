@@ -44,6 +44,12 @@ tasks:
     cmds:
       - go vet ./...
 
+  worker:
+    desc: "Jalankan worker pengecekan berkala (butuh task up + task migrate). Memanggil API asli."
+    dir: backend
+    cmds:
+      - go run ./cmd/worker
+
   probe:
     desc: "Cek satu place_id ke API asli. Contoh: task probe -- -place-id ChIJ... [-every 30m]"
     dir: backend
