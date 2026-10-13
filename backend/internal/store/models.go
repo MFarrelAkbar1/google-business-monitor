@@ -70,6 +70,7 @@ type Notification struct {
 	LastError     pgtype.Text
 	SentAt        pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamptz
+	NextAttemptAt pgtype.Timestamptz
 }
 
 type Session struct {
